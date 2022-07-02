@@ -4,6 +4,11 @@ import pyeapi
 from pprint import pprint
 import re
 
+#user options:
+collapsed_spine = 'yes' #spine will act as a vtep
+centralized_evpn = 'yes'  #no anycast gateways on leafs - good for l2 fabrics with l3 upstream
+
+
 # create a node object by specifying the node to work with
 
 node = pyeapi.connect_to("localhost")
@@ -171,12 +176,15 @@ if re.search(r'^spine', neighbor):
     'vxlan source-interface Loopback1', \
     'vxlan udp-port 4789', \
     'vxlan encapsulation ipv6', \
+    'vxlan vlan 1 vni 1', \
     'vxlan vlan 3304 vni 3304', \
         ])
 
     node.config('ip virtual-router mac-address 00:1c:73:00:00:99')
 
 #using public IPs here as they are going to need to be unique per SVIs / org 
+
+if centralized_evpn == 'no':
     node.config([\
     'interface Vlan3304', \
     'ip address virtual 193.168.104.1/24', \
@@ -199,7 +207,7 @@ if re.search(r'^spine', neighbor):
     node.config([\
     'router bgp 65002.'+ interfacenum, \
     'vlan-aware-bundle all-vlans', \
-    'rd 1:1', \
+    'rd 2:'+interfacenum, \
     'route-target both 1:1', \
     'vlan add 1-4094', \
     'redistribute learned', \
@@ -212,9 +220,47 @@ elif re.search(r'^leaf', neighbor):
     'description \"router-id\"', \
     'ipv6 address fd00::1:' + '2'+ '/128', \
     ])
+    if collapsed_spine == 'yes':
+        node.config([\
+        'router bgp 65002.'+ interfacenum, \
+        'vlan-aware-bundle all-vlans', \
+        'rd 1:2', \
+        'route-target both 1:1', \
+        'vlan add 1-4094', \
+        'redistribute learned', \
+    ])
+        node.config([\
+        'interface Vxlan1', \
+        'vxlan source-interface Loopback1', \
+        'vxlan udp-port 4789', \
+        'vxlan encapsulation ipv6', \
+        'vxlan vlan 1 vni 1', \
+        'vxlan vlan 3304 vni 3304', \
+    ])
+
+
 else:
     node.config([\
     'interface Loopback0', \
     'description \"router-id\"', \
     'ipv6 address fd00::1:' + '1' + '/128', \
     ])
+
+    if collapsed_spine == 'yes':
+        node.config([\
+        'router bgp 65002.'+ interfacenum, \
+        'vlan-aware-bundle all-vlans', \
+        'rd 1:1'+interfacenum, \
+        'route-target both 1:1', \
+        'vlan add 1-4094', \
+        'redistribute learned', \
+    ])
+        node.config([\
+        'interface Vxlan1', \
+        'vxlan source-interface Loopback1', \
+        'vxlan udp-port 4789', \
+        'vxlan encapsulation ipv6', \
+        'vxlan vlan 1 vni 1', \
+        'vxlan vlan 3304 vni 3304', \
+    ])
+
