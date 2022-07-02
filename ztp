@@ -1,0 +1,11 @@
+#!/usr/bin/Cli -p2
+
+enable
+config 
+management api http-commands
+    protocol http
+    protocol unix-socket
+    no shutdown
+copy tftp://192.168.2.117/arista_ztp/provision.py flash:provision.py
+bash /usr/bin/python3 /mnt/flash/provision.py
+write memory
