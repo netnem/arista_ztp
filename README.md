@@ -32,9 +32,9 @@ This bootstrap script will enable the pyeapi Management interface, download the 
 
 Order of operations for ZTP script is as followed: 
 
-Spine 1 must be auto-provisioned first, then at LEAST 1 leaf must be turned up.  Then spine 2 once at least 1 leaf is available.
+Spine 1 must be auto-provisioned first, then at LEAST 1 leaf must be turned up. 
 
-After that, any order is OK. They will be turned up as leafs
+After that, any order is OK. At least 1 leaf must be available for spine2 to be provisioned. Everything else will be turned up as leafs
 
 Use the following topology:
 
